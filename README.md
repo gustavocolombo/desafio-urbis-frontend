@@ -4,11 +4,11 @@ Este projeto é destinado a criação de uma API para gerenciamento eficiente, v
 
 
 # Explicação do fluxo de funcionamento da API
-1. Basicamente, a API gera uma Pre-Signed URL e disponibiliza para o cliente (usuário ou front-end) consumir, assim em uma requisição o front-end pode anexar a planilha;
+1. Basicamente, a API gera uma Pre-Signed URL através do nosso bucket S3 e disponibiliza para o cliente (usuário ou front-end) consumir, assim em uma requisição o front-end pode anexar a planilha;
 2. Ao fazer o upload da planilha via Pre-Signed URL, o arquivo vai diretamente para um bucket S3 onde dispara um trigger para uma fila SQS com metadados do arquivo que foi recém colocado no bucket
-3. A fila que já está de pé na API consome a mensagem, recebendo o Body da mesma e encaminhando para a próxima fila SQS, que também está de pé e pronta para consumir mensagens
-4. Como penúltima parte, a fila consome a mensagem recebendo o Body, fazendo o parse da mesma para JSON e assim conseguindo fazer o download da planilha a partir do S3; Em seguida é realizado a transformação da planilha para JSON (independente se a planilha tem abas ou não), então quando o processamento acaba, o array de objetos (usuários) é enviado para o próximo job;
-5. A última parte do processo é a inserção em massa com o método createMany do Prisma com a opção skipDuplicates = true, assim eliminando a possibilidade de duplicatas com registros dentro do array de objetos a ser inserido como no banco de dados.
+3. O consumer (SQSConsumerMessage) que já está pronto para consumir mensagens da fila **send-file-api-from-s3**, recebe o Body da mesma e encaminhando para a próxima fila SQS **receive-body-from-queue**
+4. Como penúltima parte, a fila **receive-body-from-queue** recebe a mensagem com o Body, fazendo o parse da mesma para JSON e assim conseguindo fazer o download da planilha a partir do S3; Em seguida é realizado a transformação da planilha para JSON (independente se a planilha tem abas ou não), então quando o processamento acaba, o array de objetos (usuários) é enviado para o próximo job;
+5. A última parte do processo é a inserção em massa com o método createMany do Prisma com a opção **skipDuplicates = true**, assim eliminando a possibilidade de duplicatas com registros dentro do array de objetos a ser inserido como no banco de dados.
 
 
 ![imagem_arquitetura_whimsical](https://github.com/user-attachments/assets/df244ffc-560a-42a9-8c1a-1e6a41a9b3a4)
@@ -42,7 +42,7 @@ Este projeto é destinado a criação de uma API para gerenciamento eficiente, v
 # Como executar o projeto
 ## Como executar o back-end localmente
 
-Após fazer o download do repositório, abra o Visual Studio Code, crie na raiz do projeto back-end o arquivo **.env** e cole os valores que foram disponibilizados via e-mail junto com o desafio. No terminal, rode o comando: **docker-compose up -d** e então o banco de dados será criado assim como o container da API. Ou se preferir rodar sem containers específicos, crie um container postgres e cole os valores respectivos em DATABASE_URL, substituindo user, password, host e database_name
+Após fazer o download do repositório, abra o Visual Studio Code, crie na raiz do projeto back-end o arquivo **.env** e cole os valores que foram disponibilizados via e-mail junto com o desafio. No terminal, rode o comando: ```docker-compose up -d``` e então o banco de dados será criado assim como o container da API. Ou se preferir rodar sem containers específicos, crie um container postgres e cole os valores respectivos em DATABASE_URL, substituindo user, password, host e database_name
 
 Em seguida rode no terminal os seguintes comandos:
 
@@ -68,10 +68,13 @@ E ainda é possível recuperar todas as whitelabels criadas no sistema.
 1. Caso queira realizar testes locais com as planilhas disponibilizadas por e-mail ou aqui pela grande volumetria de dados a fim de teste de carga, é recomendado que crie duas whitelabels e substitua os ids pelos ids das whitelabels já preenchidas nas tabelas disponibilizadas. Caso queira fazer a criação das whitelabels, pegar o id delas e substituir nas planilhas, não há problema.
 2. Comandos para rodar no banco: 
 
+``` sql 
 UPDATE whitelabels SET id = '0d2276d1-de12-4611-a8ef-e17bd2d5ecd7' WHERE id = '**ID_PRIMEIRA_WHITELABEL_CRIADA_POR_VOCE**';
+```
 
+```sql
 UPDATE whitelabels SET id = 'bc2064e6-66eb-4ae6-a3fe-cc8f58c0831c' WHERE id = '**ID_SEGUNDA_WHITELABEL_CRIADA_POR_VOCE**';
-
+```
 
 # Documentação da API
 
@@ -82,7 +85,7 @@ Caso queira acessar a documentação da API e realizar requisições pela interf
 
 ## Como rodar o front-end localmente 
 
-Abra o Visual Studio Code, navegue até a pasta do projeto e selecione a pasta front-urbis para ser aberta. Então no terminal, digite: **npm install** para adicionar as dependências. Após isso, digitar **npm run dev** e o projeto vai subir na porta 3000 e poderá ser visualizado no navegador, já em integrado com o back-end (caso ele esteja de pé). 
+Abra o Visual Studio Code, navegue até a pasta do projeto e selecione a pasta front-urbis para ser aberta. Então no terminal, digite: ```npm install``` para adicionar as dependências. Após isso, digitar ```npm run dev``` e o projeto vai subir na porta 3000 e poderá ser visualizado no navegador, já em integrado com o back-end (caso ele esteja de pé). 
 
 ![cento_vinte_comeco](https://github.com/user-attachments/assets/e4fd38bf-c2f9-4ea1-b72d-98a0a8ee1b9e)
 ![cento_vinte_loading](https://github.com/user-attachments/assets/86159c77-5978-49c4-81a4-520fddace2b6)
