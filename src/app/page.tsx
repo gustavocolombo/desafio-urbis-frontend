@@ -42,7 +42,7 @@ export default function Home() {
 
   const checkProcessStatus = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/users/insert-status`);
+      const { data } = await axios.get(`/api/users/insert-status`);
       if (data.processFinished) {
         setProcessFinished(true);
         setUserCount(data.insertedCount);
@@ -116,7 +116,7 @@ export default function Home() {
 
     try {
       const { data: preSignedUrl } = await axios.post(
-        `${API_URL}/api/aws/s3/pre-signed-url`,
+        `/api/aws/s3/pre-signed-url`,
         { fileNameLocator: fileName }
       );
 
